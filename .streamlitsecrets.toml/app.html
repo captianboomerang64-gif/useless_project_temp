@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PromptReviewer🔥</title>
+  <!-- Supabase JS Library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { font-family: sans-serif; background: #121212; color: #fff; max-width: 600px; margin: 40px auto; padding: 20px; }
+    textarea { width: 100%; height: 100px; background: #222; color: #fff; border: 1px solid #444; border-radius: 8px; padding: 10px; box-sizing: border-box; }
+    button { background: #ff0055; color: white; border: none; padding: 12px 20px; border-radius: 6px; font-size: 1rem; cursor: pointer; width: 100%; margin-top: 10px; }
+    button:hover { background: #e0004c; }
+    .card { background: #1e1e1e; border: 1px solid #333; padding: 15px; border-radius: 8px; margin-top: 15px; }
+    .verdict { color: #00f0ff; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+  <h1>🔥 Prompt Reviewer</h1>
+  <p>Submit your prompt to get reviewed.</p>
+
+  <textarea id="userPrompt" placeholder="Paste your prompt here..."></textarea>
+  <button onclick="roastPrompt()">Review My Prompt 💀</button>
+
+  <div id="result"></div>
+
+  <h2>🔥 Recent reviews</h2>
+  <div id="roastList">Loading...</div>
+
+  <script>
+    // 1. Replace with your actual Supabase credentials
+    const SUPABASE_URL = "https://aiwkzkssioeogcmfqxxe.supabase.co/rest/v1/";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpd2t6a3NzaW9lb2djbWZxeHhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkxNDgzMTgsImV4cCI6MjEwNDcyNDMxOH0.plQ_LDEuvN6O7Y5zYkx5fTXK3VO45zC_2FdNTZIV4Wk";
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const ROASTS = [
+      { roast: "Bro really thought ChatGPT was gonna write his whole thesis 😭 zero motion, zero aura.", verdict: "NPC Energy 🤖" },
+      { roast: "This prompt is so dry even water wouldn't fix it. Bffr.", verdict: "Negative Aura 💀" },
+      { roast: "Not you asking the AI to 'act as an expert' like you didn't copy-paste this off TikTok.", verdict: "Mid At Best 📉" },
+      { roast: "Sending this to an LLM should be considered a micro-aggression. Touch grass.", verdict: "Cooked Beyond Repair 🍳" },
+      { roast: "This prompt is so weak it couldn't even lift a feather. Bro needs to hit the gym.", verdict: "Weak AF 🏋️‍♂️"},
+        { roast: "This prompt is so generic it could be a placeholder in a template. Bro needs to get creative.", verdict: "Generic AF 📝"},
+        { roast: "This prompt is so confusing it could be a riddle. Bro needs to clarify his thoughts.", verdict: "Confusing AF 🤯"},
+        { roast: "This prompt is so long it could be a novel. Bro needs to be concise.", verdict: "Verbose AF 📚"},
+        { roast: "This prompt is so boring it could put a rock to sleep. Bro needs to spice it up.", verdict: "Boring AF 😴"}
+    ];
+
+    function generateRoast(prompt) {
+      if (prompt.trim().split(/\s+/).length < 4) {
+        return { roast: "A 3-word prompt? Bro expects a masterpiece from a single syllable.", verdict: "Lazy AF 🥱" };
+      }
+      if (prompt.toLowerCase().includes("please")) {
+        return { roast: "Saying 'please' to the AI won't save you during the machine uprising.", verdict: "Simp Behaviour 🤖" };
+      }
+      return ROASTS[Math.floor(Math.random() * ROASTS.length)];
+    }
+
+    async function roastPrompt() {
+      const promptText = document.getElementById("userPrompt").value;
+      if (!promptText.trim()) return alert("Enter a prompt first!");
+
+      const { roast, verdict } = generateRoast(promptText);
+
+      // Save to Supabase
+      await _supabase.from("prompt_roasts").insert([
+        { prompt: promptText, roast: roast, verdict: verdict }
+      ]);
+
+      // Display Result
+      document.getElementById("result").innerHTML = `
+        <div class="card">
+          <div class="verdict">VERDICT: ${verdict}</div>
+          <p>"${roast}"</p>
+        </div>
+      `;
+
+      document.getElementById("userPrompt").value = "";
+      loadRoasts();
+    }
+
+    async function loadRoasts() {
+      const { data, error } = await _supabase
+        .from("prompt_roasts")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(5);
+
+      if (error || !data.length) {
+        document.getElementById("roastList").innerText = "No roasts yet.";
+        return;
+      }
+
+      document.getElementById("roastList").innerHTML = data.map(item => `
+        <div class="card">
+          <small><b>Prompt:</b> ${item.prompt}</small>
+          <p><b>${item.verdict}:</b> ${item.roast}</p>
+        </div>
+      `).join("");
+    }
+
+    // Load roasts on page load
+    loadRoasts();
+  </script>
+</body>
+</html>
